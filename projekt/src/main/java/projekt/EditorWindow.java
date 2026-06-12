@@ -1,10 +1,11 @@
+// plik: src/projekt/EditorWindow.java
 package projekt;
 
 import java.io.File;
 import java.util.List;
 
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
@@ -12,11 +13,6 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.Background;
-import javafx.scene.layout.BackgroundImage;
-import javafx.scene.layout.BackgroundPosition;
-import javafx.scene.layout.BackgroundRepeat;
-import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -32,8 +28,8 @@ public class EditorWindow extends Stage {
     private final String outputSubfolder;
     private int currentIndex = 0;
 
-    private final File fileWatermarkWhite = new File("C:\\Users\\Mateusz\\Desktop\\zdjecia\\watermark\\bialy.png");
-    private final File fileWatermarkBlack = new File("C:\\Users\\Mateusz\\Desktop\\zdjecia\\watermark\\czarny.png");
+    private final File fileWatermarkWhite = new File("watermark\\bialy.png");
+    private final File fileWatermarkBlack = new File("watermark\\czarny.png");
 
     private ImageView baseView, watermarkView;
     private Image baseImage, imageWatermarkWhite, imageWatermarkBlack;
@@ -44,29 +40,12 @@ public class EditorWindow extends Stage {
     private Slider sizeSlider, opacitySlider, hInsetSlider, vInsetSlider;
     private RadioButton radioWhite, radioBlack;
 
-    Image image = new Image("file:background.jpg");
-
-    BackgroundImage backgroundImage = new BackgroundImage(
-        image,
-        BackgroundRepeat.NO_REPEAT,
-        BackgroundRepeat.NO_REPEAT,
-        BackgroundPosition.CENTER,
-        new BackgroundSize(
-                BackgroundSize.AUTO,
-                BackgroundSize.AUTO,
-                false,
-                false,
-                true,
-                true
-        )
-    );
-
     public EditorWindow(File inputDirectory, List<File> imageFiles, String outputSubfolder) {
         this.inputDirectory = inputDirectory;
         this.imageFiles = imageFiles;
         this.outputSubfolder = outputSubfolder;
 
-        this.setTitle("Watermark Creator - Edytor");
+        this.setTitle("Edytor");
 
         loadWatermarks();
 
@@ -76,23 +55,39 @@ public class EditorWindow extends Stage {
         HBox root = new HBox(previewArea, controlPanel);
         HBox.setHgrow(previewArea, Priority.ALWAYS);
 
+        root.setStyle("-fx-background-color: " + Kolory.TLO_GLOWNE + ";");
+
         previewArea.widthProperty().addListener((obs, oldVal, newVal) -> resizeLayers());
         previewArea.heightProperty().addListener((obs, oldVal, newVal) -> resizeLayers());
 
-        
-        root.setBackground(new Background(backgroundImage));
         Scene scene = new Scene(root, 1100, 650);
-        
         this.setScene(scene);
-
         this.setOnCloseRequest(e -> System.exit(0));
 
         loadCurrentImageToPreview();
     }
 
+    public static void generujAlert(Alert.AlertType typ, String tytul, String tekst) {
+        Alert alert = new Alert(typ);
+        alert.setTitle(tytul);
+        alert.setHeaderText(null);
+        alert.setContentText(tekst);
+        alert.showAndWait();
+    }
+
     private void loadWatermarks() {
-        if (fileWatermarkWhite.exists()) imageWatermarkWhite = new Image(fileWatermarkWhite.toURI().toString());
-        if (fileWatermarkBlack.exists()) imageWatermarkBlack = new Image(fileWatermarkBlack.toURI().toString());
+        if (fileWatermarkWhite.exists()){
+            imageWatermarkWhite = new Image(fileWatermarkWhite.toURI().toString());
+        } else {
+            generujAlert(Alert.AlertType.ERROR, "Błąd", "Nie znaleziono białego watermarka");
+            System.exit(0);
+        }
+        if (fileWatermarkBlack.exists()) {
+            imageWatermarkBlack = new Image(fileWatermarkBlack.toURI().toString());
+        } else {
+            generujAlert(Alert.AlertType.ERROR, "Błąd", "Nie znaleziono czarnego watermarka");
+            System.exit(0);
+        }
         
         baseView = new ImageView();
         watermarkView = new ImageView(imageWatermarkWhite);
@@ -102,24 +97,20 @@ public class EditorWindow extends Stage {
     private StackPane createPreviewArea() {
         imageLayers = new Pane(baseView, watermarkView);
         StackPane container = new StackPane(imageLayers);
+        container.setStyle("-fx-background-color: " + Kolory.TLO_GLOWNE + ";");
         return container;
     }
 
-    // ==========================================
-    // PODZIAŁ INTERFEJSU NA MNIEJSZE FUNKCJE
-    // ==========================================
-
     private VBox createControlPanel() {
         fileInfoLabel = new Label();
-        fileInfoLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #FAFAFA;");
+        fileInfoLabel.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: " + Kolory.TEKST_AKCENT + ";");
 
-        // Składamy panel z gotowych, mniejszych bloków
         HBox colorBox = createColorBox();
         GridPane slidersGrid = createSlidersGrid();
         VBox actionBox = createActionBox();
 
         VBox panel = new VBox(25, fileInfoLabel, colorBox, slidersGrid, actionBox);
-        panel.setPadding(new Insets(20));
+        panel.setStyle("-fx-background-color: " + Kolory.TLO_PANELU + "; -fx-padding: 20px;");
         panel.setMinWidth(320);
         panel.setMaxWidth(320);
         return panel;
@@ -131,6 +122,7 @@ public class EditorWindow extends Stage {
         radioWhite = new RadioButton("Białe logo");
         radioWhite.setToggleGroup(colorGroup);
         radioWhite.setSelected(true);
+        radioWhite.setStyle("-fx-text-fill: " + Kolory.TEKST_STANDARDOWY + ";");
         radioWhite.setOnAction(e -> {
             watermarkView.setImage(imageWatermarkWhite);
             updatePreviewLayers();
@@ -138,15 +130,14 @@ public class EditorWindow extends Stage {
 
         radioBlack = new RadioButton("Czarne logo");
         radioBlack.setToggleGroup(colorGroup);
+        radioBlack.setStyle("-fx-text-fill: " + Kolory.TEKST_STANDARDOWY + ";");
         radioBlack.setOnAction(e -> {
             watermarkView.setImage(imageWatermarkBlack);
             updatePreviewLayers();
         });
 
-        radioWhite.setStyle("-fx-text-fill: #FAFAFA;");
-        radioBlack.setStyle("-fx-text-fill: #FAFAFA;");
         Label colorLabel = new Label("Kolor:");
-        colorLabel.setStyle("-fx-text-fill: #FAFAFA;");
+        colorLabel.setStyle("-fx-text-fill: " + Kolory.TEKST_STANDARDOWY + ";");
 
         return new HBox(15, colorLabel, radioWhite, radioBlack);
     }
@@ -155,38 +146,34 @@ public class EditorWindow extends Stage {
         GridPane grid = new GridPane();
         grid.setVgap(15); 
         grid.setHgap(10);
+        grid.setStyle("-fx-text-fill: " + Kolory.TEKST_STANDARDOWY + ";");
 
-        // Inicjalizacja suwaków
         sizeSlider = createSlider(1, 100, 12);
         opacitySlider = createSlider(0, 100, 100);
         hInsetSlider = createSlider(-10, 10, 1);
         vInsetSlider = createSlider(-10, 10, -2);
 
-        // Dodawanie całych wierszy do siatki
         addSliderRow(grid, "Rozmiar (%):", sizeSlider, 0);
         addSliderRow(grid, "Krycie (%):", opacitySlider, 1);
         addSliderRow(grid, "Poz. margines (%):", hInsetSlider, 2);
         addSliderRow(grid, "Pion. margines (%):", vInsetSlider, 3);
-        grid.setStyle("-fx-text-fill: #FAFAFA;");
+        
         return grid;
     }
 
     private VBox createActionBox() {
         Button btnSaveAndNext = new Button("Zapisz i Następne");
-        btnSaveAndNext.setStyle("-fx-background-color: #4CAF50; -fx-text-fill: white; -fx-font-weight: bold; -fx-padding: 12;");
+        btnSaveAndNext.setStyle("-fx-background-color: #00AF00; -fx-text-fill: " + Kolory.TEKST_AKCENT + "; -fx-font-weight: bold; -fx-padding: 12;");
         btnSaveAndNext.setMaxWidth(Double.MAX_VALUE);
         btnSaveAndNext.setOnAction(e -> saveCurrentAndLoadNext());
 
         Button btnSkip = new Button("Pomiń zdjęcie");
+        btnSkip.setStyle("-fx-background-color: " + Kolory.TLO_GLOWNE + "; -fx-text-fill: " + Kolory.TEKST_STANDARDOWY + "; -fx-font-weight: bold; -fx-padding: 12;");
         btnSkip.setMaxWidth(Double.MAX_VALUE);
         btnSkip.setOnAction(e -> skipToNext());
 
         return new VBox(10, btnSaveAndNext, btnSkip);
     }
-
-    // ==========================================
-    // METODY POMOCNICZE DLA UI
-    // ==========================================
 
     private Slider createSlider(double min, double max, double value) {
         Slider slider = new Slider(min, max, value);
@@ -198,21 +185,15 @@ public class EditorWindow extends Stage {
 
     private void addSliderRow(GridPane grid, String labelText, Slider slider, int rowIndex) {
         Label label = new Label(labelText);
-        label.setStyle("-fx-text-fill: #FAFAFA;");
-        
+        label.setStyle("-fx-text-fill: " + Kolory.TEKST_STANDARDOWY + ";");
         grid.add(label, 0, rowIndex);
         grid.add(slider, 1, rowIndex);
     }
 
-    // ==========================================
-    // LOGIKA PODGLĄDU I ZAPISU
-    // ==========================================
-
     private void loadCurrentImageToPreview() {
         if (currentIndex >= imageFiles.size()) {
-            fileInfoLabel.setText("Zakończono pracę!");
-            baseView.setImage(null);
-            watermarkView.setImage(null);
+            generujAlert(Alert.AlertType.INFORMATION, "Zakończono pracę", "Wszystkie zdjęcia zostały pomyślnie przetworzone!");
+            this.close();
             return;
         }
 
@@ -272,7 +253,7 @@ public class EditorWindow extends Stage {
             float calculatedOpacity = (float) (opacitySlider.getValue() / 100.0);
             Watermark.applyWatermark(
                     currentSourceFile, currentWatermark, outputFile,
-                    sizeSlider.getValue(), calculatedOpacity,
+                    sizeSlider.getValue(), calculatedOpacity, 
                     hInsetSlider.getValue(), vInsetSlider.getValue()
             );
             System.out.println("Zapisano: " + outputFile.getAbsolutePath());
