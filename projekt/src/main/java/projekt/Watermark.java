@@ -30,30 +30,30 @@ public class Watermark {
         }
     }
 
-    public static void applyWatermark(File plikZrodlowy, File plikZnaku, File plikWyjsciowy, 
-                                      double procentRozmiaru, float krycie, 
-                                      double procentMarginesuPoziom, double procentMarginesuPion) throws IOException {
+
+    public static void applyWatermark(File sourceFile, File watermarkFile, File outputFile, 
+                                      double sizePercentage, float opacity, 
+                                      double hInsetPercentage, double vInsetPercentage) throws IOException {
         
-        BufferedImage zdjZrodlowe = ImageIO.read(plikZrodlowy);
-        int szerokoscZdjecia = zdjZrodlowe.getWidth();
-        int wysokoscZdjecia = zdjZrodlowe.getHeight();
+        BufferedImage sourceImage = ImageIO.read(sourceFile);
+        int sourceWidth = sourceImage.getWidth();
+        int sourceHeight = sourceImage.getHeight();
 
-        int docelowaSzerokoscZnaku = Math.max(1, przeliczPiksele(szerokoscZdjecia, procentRozmiaru));
-        int marginesPoziomy = przeliczPiksele(szerokoscZdjecia, procentMarginesuPoziom);
-        int marginesPionowy = przeliczPiksele(wysokoscZdjecia, procentMarginesuPion);
+        int targetWatermarkWidth = Math.max(1, (int) Math.round(sourceWidth * (sizePercentage / 100.0)));
+        
+        BufferedImage resizedWatermark = Thumbnails.of(watermarkFile)
+                .width(targetWatermarkWidth)
+                .asBufferedImage();
 
-        BufferedImage nowyZnakWodny = Thumbnails.of(plikZnaku).width(docelowaSzerokoscZnaku).asBufferedImage();
+        int maxX = sourceWidth - resizedWatermark.getWidth();
+        int maxY = sourceHeight - resizedWatermark.getHeight();
 
-        int pozycjaX = marginesPoziomy;
-        int pozycjaY = wysokoscZdjecia - nowyZnakWodny.getHeight() - marginesPionowy;
+        int posX = (int) Math.round(maxX * (hInsetPercentage / 100.0));
+        int posY = maxY - (int) Math.round(maxY * (vInsetPercentage / 100.0));
 
-        Thumbnails.of(zdjZrodlowe)
-                .scale(1.0)
-                .watermark(new Coordinate(pozycjaX, pozycjaY), nowyZnakWodny, krycie)
-                .toFile(plikWyjsciowy);
-    }
-
-    private static int przeliczPiksele(int wartoscBazy, double procent) {
-        return (int) Math.round(wartoscBazy * (procent / 100.0));
+        Thumbnails.of(sourceImage)
+                .scale(1.0) // Skala 1.0 gwarantuje brak utraty jakości tła
+                .watermark(new Coordinate(posX, posY), resizedWatermark, opacity)
+                .toFile(outputFile);
     }
 }
