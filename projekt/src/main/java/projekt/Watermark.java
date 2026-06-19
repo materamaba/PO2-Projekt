@@ -12,7 +12,6 @@ import net.coobird.thumbnailator.geometry.Coordinate;
 public class Watermark {
 
     public static void main(String[] args) {
-        // Metoda testowa ze zaktualizowanymi zmiennymi
         File plikZrodlowy = new File("C:\\Users\\Mateusz\\Desktop\\zdjecia\\projekt\\DSC_4053.jpg");
         File plikZnaku = new File("C:\\Users\\Mateusz\\Desktop\\zdjecia\\watermark\\bialy.png");
         File plikWyjsciowy = new File("zdjecie_z_watermarkiem.jpg");
@@ -39,19 +38,15 @@ public class Watermark {
         int szerokoscZdjecia = zdjZrodlowe.getWidth();
         int wysokoscZdjecia = zdjZrodlowe.getHeight();
 
-        // Przeliczenie procentów z suwaków na konkretne piksele
         int docelowaSzerokoscZnaku = Math.max(1, przeliczPiksele(szerokoscZdjecia, procentRozmiaru));
         int marginesPoziomy = przeliczPiksele(szerokoscZdjecia, procentMarginesuPoziom);
         int marginesPionowy = przeliczPiksele(wysokoscZdjecia, procentMarginesuPion);
 
-        // Skalowanie znaku wodnego za pomocą Thumbnailator
         BufferedImage nowyZnakWodny = Thumbnails.of(plikZnaku).width(docelowaSzerokoscZnaku).asBufferedImage();
 
-        // Obliczenie współrzędnych umiejscowienia logo
         int pozycjaX = marginesPoziomy;
         int pozycjaY = wysokoscZdjecia - nowyZnakWodny.getHeight() - marginesPionowy;
 
-        // Nałożenie znaku na grafikę i zapis do pliku
         Thumbnails.of(zdjZrodlowe)
                 .scale(1.0)
                 .watermark(new Coordinate(pozycjaX, pozycjaY), nowyZnakWodny, krycie)

@@ -1,4 +1,3 @@
-// plik: src/projekt/Main.java
 package projekt;
 
 import java.io.File;
@@ -66,7 +65,7 @@ public class Main extends Application {
         
         btnStart.setOnAction(e -> {
             if (inputDirectory == null) {
-                EditorWindow.generujAlert(Alert.AlertType.WARNING, "Brak folderu", "Musisz najpierw wybrać folder ze zdjęciami!");
+                EditorWindow.generateAlert(Alert.AlertType.WARNING, "Brak folderu", "Musisz najpierw wybrać folder ze zdjęciami!");
                 return;
             }
 
@@ -76,7 +75,7 @@ public class Main extends Application {
             });
 
             if (files == null || files.length == 0) {
-                EditorWindow.generujAlert(Alert.AlertType.ERROR, "Błąd plików", "Brak zdjęć JPG/PNG w wybranym folderze!");
+                EditorWindow.generateAlert(Alert.AlertType.ERROR, "Błąd plików", "Brak zdjęć JPG/PNG w wybranym folderze!");
                 return;
             }
 
